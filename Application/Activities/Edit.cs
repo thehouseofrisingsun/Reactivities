@@ -29,7 +29,6 @@ namespace Application.Activities
             {
                 var activity = await _context.Activities.FindAsync(request.Activity.Id);
                 _mapper.Map(request.Activity, activity);
-                activity.Title = "New title";
 
                 await _context.SaveChangesAsync();
             }
