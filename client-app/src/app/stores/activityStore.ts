@@ -1,7 +1,7 @@
 import { makeAutoObservable, runInAction } from "mobx"
 import { Activity } from "../models/activity";
 import agent from "../layout/api/agent";
-import {v4 as uuid} from 'uuid';
+import { v4 as uuid } from 'uuid';
 
 export default class ActivityStore {
     activityRegistry = new Map<string, Activity>;
@@ -19,6 +19,16 @@ export default class ActivityStore {
             Date.parse(a.date) - Date.parse(b.date));
     }
 
+    get groupedActivities() {
+        return Object.entries(
+            this.activitiesByDate.reduce((activities, activity) => {
+                const date = activity.date;// this is the key
+                activities[date] = activities[date] ? [...activities[date], activity] : [activity];
+                return activities;
+            }, {} as { [key: string]: Activity[] })
+        )
+    }
+
     loadActivities = async () => {
         this.setLoadingInitial(true);
         try {
@@ -33,22 +43,22 @@ export default class ActivityStore {
         }
     }
 
-    loadActivity = async (id:string) => {
+    loadActivity = async (id: string) => {
         let activity = this.getActivity(id);
-        if(activity) {
+        if (activity) {
             this.selectedActivity = activity;
             return activity;
         }
-        else{
+        else {
             this.setLoadingInitial(true);
-            try{
+            try {
                 activity = await agent.Activities.details(id);
                 this.setActivity(activity);
                 this.setLoadingInitial(false);
                 this.selectedActivity = activity;
                 return activity;
             }
-            catch(error){
+            catch (error) {
                 console.log(error);
                 this.setLoadingInitial(false);
             }
@@ -56,12 +66,12 @@ export default class ActivityStore {
 
     }
 
-    private setActivity = (activity:Activity) =>{
+    private setActivity = (activity: Activity) => {
         activity.date = activity.date.split('T')[0];
         this.activityRegistry.set(activity.id, activity);
     }
 
-    private getActivity = (id:string) => {
+    private getActivity = (id: string) => {
         return this.activityRegistry.get(id);
     }
 
@@ -116,7 +126,7 @@ export default class ActivityStore {
                 this.loading = false;
             })
         }
-        catch(error) {
+        catch (error) {
             console.log(error)
             runInAction(() => {
                 this.loading = false;
